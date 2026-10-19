@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icon.svg"><meta name="theme-color" content="#081b25"><meta name="mobile-web-app-capable" content="yes">
+<title>CARAWI en ligne</title>
+<style>
+:root{color-scheme:dark;--bg:#081b25;--panel:#12303c;--gold:#f2c66d;--cream:#fffaf0;--muted:#b9cbd0;--red:#d63242;--green:#39b58a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#081b25}}
+:root[data-theme="dark"]{--bg:#081b25}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:radial-gradient(ellipse at top,#174452,var(--bg) 65%);background-color:var(--bg);color:var(--cream);font-family:system-ui,Roboto,sans-serif;min-height:100vh}
+h1{margin:0;text-align:center;color:var(--gold);letter-spacing:.12em;font-size:2.2rem;padding:20px 10px 4px}
+.sub{text-align:center;color:var(--muted);font-size:.8rem;margin-bottom:8px}
+.wrap{max-width:720px;margin:auto;padding:8px 14px 30px}
+.panel{background:var(--panel);border:1px solid #37606a;border-radius:20px;padding:16px;margin:12px 0}
+button{border:0;border-radius:14px;padding:13px 16px;font:inherit;font-weight:800;background:var(--gold);color:#15262b;box-shadow:0 4px 0 #a57c32;cursor:pointer}
+button:active{transform:translateY(2px)}button.s{background:#244c59;color:#fff;box-shadow:0 4px 0 #102f3a}button:disabled{opacity:.35}
+input{width:100%;padding:12px;border-radius:12px;border:1px solid #456773;background:#09232d;color:#fff;font:inherit;margin:6px 0 12px}
+input.c{text-transform:uppercase;letter-spacing:.4em;text-align:center;font-size:1.4rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}.hidden{display:none!important}
+.muted{color:var(--muted);font-size:.85rem}.msg{background:#09232d;border:1px solid var(--gold);border-radius:12px;padding:10px 12px;margin:10px 0}
+.chips{display:flex;gap:8px;overflow:auto;padding-bottom:6px}.chip{background:#0a2630;border:1px solid #335763;border-radius:12px;padding:8px 12px;white-space:nowrap;font-size:.85rem}.chip.on{border-color:var(--gold);color:var(--gold)}
+.table{background:radial-gradient(ellipse,#206044,#104333 70%);border:5px solid #6a4a2d;border-radius:40px;padding:18px;display:flex;gap:22px;justify-content:center;align-items:center}
+.card{width:62px;height:92px;background:#fffdf6;color:#15222a;border-radius:9px;display:flex;flex-direction:column;justify-content:space-between;padding:5px;font-weight:900;font-size:1rem;line-height:1.05;border:1px solid #d5d2c8;box-shadow:0 5px 10px #0004;flex-shrink:0}
+.card.r{color:var(--red)}.card b{align-self:center;font-size:1.6rem}
+.card.back{background:repeating-linear-gradient(45deg,#153c65,#153c65 5px,var(--gold) 5px,var(--gold) 7px);border:4px solid #fff8e7}
+.hand{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;padding:10px 0}
+.hand button.card{cursor:pointer;box-shadow:0 5px 10px #0004;font-weight:900;text-align:left}.hand .ok{outline:3px solid var(--gold);transform:translateY(-6px)}
+.suits{display:flex;gap:8px;flex-wrap:wrap}.suits button{flex:1;background:#fffaf0;color:#17252a;box-shadow:0 4px 0 #cfc7b4;font-size:1.1rem}.suits .r{color:var(--red)}
+table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px 6px;border-bottom:1px solid #31515b}th{color:var(--gold);font-size:.75rem}
+</style></head><body>
+<h1>♣ CARAWI ♦</h1><div class="sub">LE JEU DE CARTES · EN LIGNE · 2 À 6 JOUEURS</div>
+<main class="wrap">
+<div id="err" class="msg hidden"></div>
+<section id="home" class="panel">
+<label class="muted" for="nm">Ton nom</label><input id="nm" maxlength="16" placeholder="Ton prénom">
+<button id="new" style="width:100%">Créer une partie</button>
+<p class="muted" style="text-align:center">ou rejoindre avec un code</p>
+<input id="cd" class="c" maxlength="4" placeholder="CODE" autocapitalize="characters">
+<button id="join" class="s" style="width:100%">Rejoindre</button>
+</section>
+<section id="lobby" class="panel hidden">
+<div class="muted">Code de la partie — donne-le à tes amis</div>
+<div id="lcode" style="font-size:2.6rem;font-weight:900;color:var(--gold);letter-spacing:.3em;text-align:center"></div>
+<div id="lpl" class="chips" style="flex-wrap:wrap"></div>
+<p class="muted">Règles : 5 cartes chacun. Même valeur ou même symbole. As : le suivant contre avec un As ou pioche 2. Le 8 change la couleur et permet de rejouer. Victoire = 1 point (2 si on finit par un 3). Premier à 10 points gagne.</p>
+<button id="go" style="width:100%">Distribuer les cartes</button>
+</section>
+<section id="game" class="hidden">
+<div class="panel"><div class="chips" id="gpl"></div>
+<div id="turn" style="font-size:1.2rem;font-weight:900"></div>
+<div id="gmsg" class="msg"></div>
+<div class="table"><div><div class="muted">Dernière carte</div><div id="top"></div></div><div><div class="muted">Pioche <span id="dk"></span></div><div class="card back"></div></div></div>
+<div id="pick" class="hidden"><p class="muted">Choisis la nouvelle couleur :</p><div class="suits">
+<button class="r" data-s="♥">♥</button><button class="r" data-s="♦">♦</button><button data-s="♣">♣</button><button data-s="♠">♠</button></div></div>
+<div class="row" style="margin-top:12px"><button id="draw">Piocher</button><button id="pass" class="s hidden">Passer</button></div></div>
+<div class="panel"><div class="muted">Ta main</div><div id="hand" class="hand"></div></div>
+</section>
+<section id="end" class="panel hidden" style="text-align:center"><div style="font-size:3rem">🏆</div><h2 id="et"></h2><div id="sc" style="text-align:left"></div><br><button id="next">Manche suivante</button></section>
+<div class="sub" id="ft"></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const red=c=>c.s==="♥"||c.s==="♦";
+const esc=t=>String(t).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function err(t){$("err").textContent=t;$("err").classList.toggle("hidden",!t)}
+let ws,S=null,code="",name="",tok="";
+try{tok=localStorage.getItem("cw-tok")||"";name=localStorage.getItem("cw-nm")||""}catch(e){}
+if(!tok){tok=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now();try{localStorage.setItem("cw-tok",tok)}catch(e){}}
+$("nm").value=name;
+const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
+function connect(first){ws=new WebSocket((location.protocol==="https:"?"wss://":"ws://")+location.host);
+  ws.onopen=first;
+  ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.err)err(m.err);else{S=m.state;code=S.code;err("");render()}};
+  ws.onclose=()=>{if(code){err("Connexion perdue, reconnexion…");setTimeout(()=>connect(()=>send({t:"join",code,name,tok})),1500)}}}
+function enter(t){name=$("nm").value.trim()||"Joueur";try{localStorage.setItem("cw-nm",name)}catch(e){}err("");
+  const m=t==="create"?{t,name,tok}:{t,code:$("cd").value.trim().toUpperCase(),name,tok};
+  if(ws&&ws.readyState===1)send(m);else connect(()=>send(m))}
+const card=c=>`<div class="card ${red(c)?"r":""}"><span>${c.r}<br>${c.s}</span><b>${c.s}</b></div>`;
+function show(id){["home","lobby","game","end"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
+function render(){const s=S;if(!s)return;
+  if(s.status==="lobby"){show("lobby");$("lcode").textContent=s.code;
+    $("lpl").innerHTML=s.players.map(p=>`<div class="chip">${esc(p.name)}${p.on?"":" (hors ligne)"}</div>`).join("");
+    $("go").disabled=!s.host||s.players.length<2;
+    $("go").textContent=s.host?(s.players.length<2?"En attente d’autres joueurs…":"Distribuer les cartes"):"Le créateur lance la partie…";return}
+  if(s.status!=="play"){show("end");$("et").textContent=s.status==="over"?"🏆 "+s.win+" remporte CARAWI !":s.win+" gagne la manche (+"+s.gain+")";
+    const a=[...s.players].sort((x,y)=>y.pts-x.pts);
+    $("sc").innerHTML="<table><tr><th>Joueur</th><th>Manches</th><th>Score</th></tr>"+a.map(p=>`<tr><td>${esc(p.name)}</td><td>${p.wins}</td><td><b>${p.pts}/10</b></td></tr>`).join("")+"</table>";
+    $("next").disabled=!s.host;$("next").textContent=s.host?(s.status==="over"?"Nouvelle partie":"Manche suivante"):"En attente du créateur…";return}
+  show("game");const m=s.cur===s.me,cp=s.players[s.cur];
+  $("gpl").innerHTML=s.players.map((p,i)=>`<div class="chip ${i===s.cur?"on":""}">${esc(p.name)}${p.on?"":" ⚠"} · ${p.n} 🂠 · ${p.pts} pt</div>`).join("");
+  $("turn").textContent=m?"À toi de jouer !":"Tour de "+cp.name;$("gmsg").textContent=s.msg;
+  $("top").innerHTML=card(s.top);$("dk").textContent="("+s.deck+")";
+  $("pick").classList.toggle("hidden",!(m&&s.pend8));
+  $("draw").disabled=!m||s.drew||s.pend8;
+  $("pass").classList.toggle("hidden",!((m&&s.drew)||(!m&&!cp.on)));
+  $("pass").textContent=m?"Passer":"Passer son tour (hors ligne)";
+  $("hand").innerHTML=s.hand.map((c,i)=>`<button class="card ${red(c)?"r":""} ${s.ok[i]?"ok":""}" data-i="${i}"><span>${c.r}<br>${c.s}</span><b>${c.s}</b></button>`).join("")}
+$("new").onclick=()=>enter("create");
+$("join").onclick=()=>{if($("cd").value.trim().length!==4){err("Entre le code à 4 lettres.");return}enter("join")};
+$("go").onclick=()=>send({t:"start"});$("next").onclick=()=>send({t:"next"});
+$("draw").onclick=()=>send({t:"draw"});$("pass").onclick=()=>send({t:"pass"});
+$("pick").onclick=e=>{const b=e.target.closest("[data-s]");if(b)send({t:"suit",s:b.dataset.s})};
+$("hand").onclick=e=>{const b=e.target.closest("[data-i]");if(b)send({t:"play",i:+b.dataset.i})};
+$("ft").textContent="Astuce Android : menu ⋮ de Chrome → « Ajouter à l’écran d’accueil ».";
+</script></body></html>
